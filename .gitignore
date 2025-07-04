@@ -1,0 +1,43 @@
+# CRITICAL: Add this .gitignore file to your repository
+
+# Credentials and secrets
+service-account.json
+*.json
+.env
+.streamlit/secrets.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Data files (if any sensitive data)
+*.pkl
+*.csv
+*.geojson
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/config.toml
+
+# Logs
+*.log

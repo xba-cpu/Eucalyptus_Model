@@ -116,3 +116,4 @@ wcwidth==0.2.13
 widgetsnbextension==4.0.14
 xarray==2025.6.1
 xyzservices==2025.4.0
+python-dotenv>=1.0.0

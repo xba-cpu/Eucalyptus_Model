@@ -17,6 +17,7 @@ import pickle
 import warnings
 import tempfile
 import os
+import json
 import sys
 from datetime import datetime, date
 import plotly.express as px
@@ -1007,22 +1008,55 @@ class EnhancedEucalyptusPredictor:
             'pixels_analyzed': 0,
             'feature_quality': 'none'
         }
-
-# Initialize Google Earth Engine
 @st.cache_resource
 def initialize_earth_engine():
+    """Initialize Earth Engine with service account authentication"""
     try:
-        ee.Initialize(project='ee-athuldasxba')
-        return True
-    except:
-        try:
-            ee.Authenticate()
-            ee.Initialize(project='ee-athuldasxba')
+        # Method 1: Using Streamlit secrets (for Streamlit Cloud)
+        if hasattr(st, 'secrets') and 'gcp_service_account' in st.secrets:
+            service_account_info = dict(st.secrets["gcp_service_account"])
+            credentials = ee.ServiceAccountCredentials(
+                email=service_account_info['client_email'],
+                key_data=json.dumps(service_account_info)
+            )
+            ee.Initialize(credentials=credentials)
             return True
-        except Exception as e:
-            st.error(f"Failed to initialize Google Earth Engine: {str(e)}")
+            
+        # Method 2: Using environment variable (for local development)
+        elif 'GOOGLE_APPLICATION_CREDENTIALS' in os.environ:
+            credentials_path = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
+            if os.path.exists(credentials_path):
+                with open(credentials_path, 'r') as f:
+                    service_account_info = json.load(f)
+                    
+                credentials = ee.ServiceAccountCredentials(
+                    email=service_account_info['client_email'],
+                    key_file=credentials_path
+                )
+                ee.Initialize(credentials=credentials, project=service_account_info['project_id'])
+                return True
+            else:
+                st.error("❌ Credentials file not found")
+                return False
+        
+        # Method 3: Using uploaded file (for testing)
+        elif hasattr(st.session_state, 'ee_credentials'):
+            credentials = ee.ServiceAccountCredentials(
+                email=st.session_state.ee_credentials['client_email'],
+                key_data=json.dumps(st.session_state.ee_credentials)
+            )
+            ee.Initialize(credentials=credentials)
+            return True
+            
+        else:
+            st.error("❌ No Earth Engine credentials found. Please configure authentication.")
             return False
+            
+    except Exception as e:
+        st.error(f"❌ Failed to initialize Earth Engine: {str(e)}")
+        return False
 
+    
 # Main Streamlit App
 def main():
     st.title("🌿 Enhanced Eucalyptus Prediction System")
@@ -1046,7 +1080,7 @@ def main():
     model_file = st.sidebar.file_uploader(
         "Upload Enhanced Model (.pkl)",
         type=['pkl'],
-        help="Upload your trained eucalyptus classification model with enhanced features"
+        help="Upload your trained eucalyptus classification model with enhanced features (max 500MB)"
     )
     
     # GeoJSON file upload
@@ -1060,7 +1094,7 @@ def main():
     st.sidebar.header("📅 Analysis Parameters")
     start_date = st.sidebar.date_input(
         "Start Date",
-        value=date(2024, 1, 1),
+        value=date(2025, 1, 1),
         min_value=date(2020, 1, 1),
         max_value=date.today(),
         help="Start date for satellite data collection"
@@ -1068,7 +1102,7 @@ def main():
     
     end_date = st.sidebar.date_input(
         "End Date",
-        value=date(2024, 12, 31),
+        value=date(2025, 6, 30),
         min_value=date(2020, 1, 1),
         max_value=date.today(),
         help="End date for satellite data collection"
