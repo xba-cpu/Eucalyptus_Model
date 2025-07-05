@@ -1,4 +1,3 @@
-# Page configuration - MUST BE FIRST STREAMLIT COMMAND
 import streamlit as st
 
 st.set_page_config(
@@ -9,7 +8,7 @@ st.set_page_config(
 
 # Now import other modules
 import ee
-import geemap
+# import geemap
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -18,18 +17,18 @@ import warnings
 import tempfile
 import os
 import json
-import sys
+# import sys
 from datetime import datetime, date
 import plotly.express as px
 import plotly.graph_objects as go
 
 # Fix sklearn import issue - corrected version
 try:
-    import sklearn
-    import sklearn.ensemble
-    import sklearn.preprocessing
-    import sklearn.metrics
-    import sklearn.model_selection
+    # import sklearn
+    # import sklearn.ensemble
+    # import sklearn.preprocessing
+    # import sklearn.metrics
+    # import sklearn.model_selection
     from sklearn.ensemble import VotingClassifier, RandomForestClassifier
     from sklearn.svm import SVC
     print("✅ scikit-learn imported successfully")
@@ -67,11 +66,11 @@ class EnhancedEucalyptusPredictor:
     def load_model(self, model_path):
         """Load trained model from .pkl file"""
         try:
-            import sklearn
-            import sklearn.ensemble
-            import sklearn.preprocessing
-            import sklearn.metrics
-            import sklearn.model_selection
+            # import sklearn
+            # import sklearn.ensemble
+            # import sklearn.preprocessing
+            # import sklearn.metrics
+            # import sklearn.model_selection
             
             with open(model_path, 'rb') as f:
                 model_data = pickle.load(f)
@@ -900,10 +899,6 @@ class EnhancedEucalyptusPredictor:
                         confidence = np.mean(max_prob) if max_prob is not None else np.mean(np.max(pred_proba, axis=1)) if pred_proba is not None else 0.5
                         eucalyptus_prob = np.mean(np.sum(pred_proba[:, 1:], axis=1)) if pred_proba is not None and pred_proba.shape[1] > 1 else 0
                         
-                        # Enhanced uncertainty metrics
-                        uncertainty = np.mean(entropy) if entropy is not None else 0
-                        prediction_stability = np.std(pred_class) / (np.mean(pred_class) + 0.001)
-
                         # Enhanced biophysical info - check both model features and raw features
                         avg_height = 0
                         avg_ndvi = 0
@@ -940,11 +935,6 @@ class EnhancedEucalyptusPredictor:
                             elif feature in features_df.columns:
                                 avg_moisture = features_df[feature].mean()
                                 break
-                        
-                        # Maturity indicators
-                        maturity_score = 0
-                        if 'HEIGHT_UNIFORMITY' in model_features.columns:
-                            maturity_score = model_features['HEIGHT_UNIFORMITY'].mean()
 
                         predictions.append({
                             'polygon_id': idx,
@@ -952,14 +942,11 @@ class EnhancedEucalyptusPredictor:
                             'predicted_label': self.class_labels.get(majority_class, 'Unknown'),
                             'confidence': confidence,
                             'eucalyptus_probability': eucalyptus_prob,
-                            'uncertainty': uncertainty,
-                            'prediction_stability': prediction_stability,
                             'is_eucalyptus': majority_class > 0,
                             'avg_height': avg_height,
                             'avg_ndvi': avg_ndvi,
                             'avg_red_edge': avg_red_edge,
                             'avg_moisture': avg_moisture,
-                            'maturity_score': maturity_score,
                             'pixels_analyzed': len(model_features),
                             'feature_quality': 'high' if len(model_features) > 50 else 'medium' if len(model_features) > 20 else 'low'
                         })
@@ -997,17 +984,15 @@ class EnhancedEucalyptusPredictor:
             'predicted_label': 'Non-Eucalyptus',
             'confidence': 0.0,
             'eucalyptus_probability': 0.0,
-            'uncertainty': 1.0,
-            'prediction_stability': 0.0,
             'is_eucalyptus': False,
             'avg_height': 0,
             'avg_ndvi': 0,
             'avg_red_edge': 0,
             'avg_moisture': 0,
-            'maturity_score': 0,
             'pixels_analyzed': 0,
             'feature_quality': 'none'
         }
+
 @st.cache_resource
 def initialize_earth_engine():
     """Initialize Earth Engine with service account authentication"""
@@ -1326,8 +1311,8 @@ def display_enhanced_results(results_df, gdf_result):
     st.markdown("---")
     st.subheader("📊 Enhanced Prediction Results")
     
-    # Enhanced summary metrics
-    col1, col2, col3, col4, col5 = st.columns(5)
+    # Enhanced summary metrics (removed uncertainty and maturity score)
+    col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.metric("Total Polygons", len(results_df))
@@ -1344,22 +1329,14 @@ def display_enhanced_results(results_df, gdf_result):
         avg_confidence = results_df['confidence'].mean()
         st.metric("Avg Confidence", f"{avg_confidence:.3f}")
     
-    with col5:
-        avg_uncertainty = results_df['uncertainty'].mean() if 'uncertainty' in results_df.columns else 0
-        st.metric("Avg Uncertainty", f"{avg_uncertainty:.3f}")
-    
-    # Enhanced quality metrics
-    col1, col2, col3 = st.columns(3)
+    # Enhanced quality metrics (removed avg maturity)
+    col1, col2 = st.columns(2)
     
     with col1:
         high_quality = sum(results_df['feature_quality'] == 'high') if 'feature_quality' in results_df.columns else 0
         st.metric("High Quality Predictions", high_quality)
     
     with col2:
-        avg_maturity = results_df['maturity_score'].mean() if 'maturity_score' in results_df.columns else 0
-        st.metric("Avg Maturity Score", f"{avg_maturity:.3f}")
-    
-    with col3:
         high_confidence = sum(results_df['confidence'] > 0.8)
         st.metric("High Confidence (>0.8)", high_confidence)
     
@@ -1371,8 +1348,8 @@ def display_enhanced_results(results_df, gdf_result):
             st.subheader("🌿 Eucalyptus Classification Details")
             eucalyptus_only = results_df[results_df['is_eucalyptus']]
             
-            # Enhanced breakdown table
-            breakdown_cols = ['confidence', 'uncertainty', 'maturity_score', 'avg_height', 'avg_ndvi']
+            # Enhanced breakdown table (removed uncertainty and maturity_score)
+            breakdown_cols = ['confidence', 'avg_height', 'avg_ndvi']
             available_cols = [col for col in breakdown_cols if col in eucalyptus_only.columns]
             
             if available_cols:
@@ -1380,14 +1357,13 @@ def display_enhanced_results(results_df, gdf_result):
                 st.dataframe(breakdown_data, use_container_width=True)
         
         with col2:
-            # Enhanced visualization - Height vs Confidence
+            # Enhanced visualization - Height vs Confidence (removed maturity_score from size)
             if all(col in eucalyptus_only.columns for col in ['avg_height', 'confidence', 'predicted_label']):
                 fig = px.scatter(
                     eucalyptus_only, 
                     x='avg_height', 
                     y='confidence',
                     color='predicted_label',
-                    size='maturity_score' if 'maturity_score' in eucalyptus_only.columns else None,
                     title="Eucalyptus: Height vs Confidence by Age Class",
                     labels={'avg_height': 'Average Height (m)', 'confidence': 'Prediction Confidence'}
                 )
@@ -1424,10 +1400,10 @@ def display_enhanced_results(results_df, gdf_result):
     if quality_filter != "All" and 'feature_quality' in filtered_df.columns:
         filtered_df = filtered_df[filtered_df['feature_quality'] == quality_filter]
     
-    # Enhanced display columns
+    # Enhanced display columns (removed uncertainty and maturity_score)
     display_columns = [
-        'polygon_id', 'predicted_label', 'confidence', 'uncertainty',
-        'eucalyptus_probability', 'maturity_score', 'avg_height', 
+        'polygon_id', 'predicted_label', 'confidence',
+        'eucalyptus_probability', 'avg_height', 
         'avg_ndvi', 'avg_red_edge', 'avg_moisture', 'pixels_analyzed', 'feature_quality'
     ]
     
@@ -1443,13 +1419,9 @@ def display_enhanced_results(results_df, gdf_result):
             'confidence': st.column_config.ProgressColumn(
                 'Confidence', min_value=0, max_value=1
             ),
-            'uncertainty': st.column_config.ProgressColumn(
-                'Uncertainty', min_value=0, max_value=1
-            ),
             'eucalyptus_probability': st.column_config.ProgressColumn(
                 'Eucalyptus Prob', min_value=0, max_value=1
             ),
-            'maturity_score': 'Maturity Score',
             'avg_height': 'Avg Height (m)',
             'avg_ndvi': 'Avg NDVI',
             'avg_red_edge': 'Avg Red Edge',
@@ -1474,7 +1446,7 @@ def display_enhanced_results(results_df, gdf_result):
         )
     
     with col2:
-        # Summary report download
+        # Summary report download (removed uncertainty and maturity references)
         summary_report = f"""Enhanced Eucalyptus Prediction Summary Report
 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
@@ -1483,7 +1455,6 @@ Eucalyptus Detected: {sum(results_df['is_eucalyptus'])}
 Non-Eucalyptus: {sum(~results_df['is_eucalyptus'])}
 
 Average Confidence: {results_df['confidence'].mean():.3f}
-Average Uncertainty: {results_df['uncertainty'].mean():.3f}
 High Quality Predictions: {sum(results_df['feature_quality'] == 'high') if 'feature_quality' in results_df.columns else 'N/A'}
 
 Classification Breakdown:
