@@ -17,18 +17,18 @@ import warnings
 import tempfile
 import os
 import json
-# import sys
+import sys
 from datetime import datetime, date
 import plotly.express as px
 import plotly.graph_objects as go
 
 # Fix sklearn import issue - corrected version
 try:
-    # import sklearn
-    # import sklearn.ensemble
-    # import sklearn.preprocessing
-    # import sklearn.metrics
-    # import sklearn.model_selection
+    import sklearn
+    import sklearn.ensemble
+    import sklearn.preprocessing
+    import sklearn.metrics
+    import sklearn.model_selection
     from sklearn.ensemble import VotingClassifier, RandomForestClassifier
     from sklearn.svm import SVC
     print("✅ scikit-learn imported successfully")
@@ -66,11 +66,11 @@ class EnhancedEucalyptusPredictor:
     def load_model(self, model_path):
         """Load trained model from .pkl file"""
         try:
-            # import sklearn
-            # import sklearn.ensemble
-            # import sklearn.preprocessing
-            # import sklearn.metrics
-            # import sklearn.model_selection
+            import sklearn
+            import sklearn.ensemble
+            import sklearn.preprocessing
+            import sklearn.metrics
+            import sklearn.model_selection
             
             with open(model_path, 'rb') as f:
                 model_data = pickle.load(f)
